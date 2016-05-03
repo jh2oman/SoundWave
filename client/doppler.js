@@ -14,8 +14,24 @@ window.doppler = (function() {
 
   // See paper for this particular choice of frequencies
   var relevantFreqWindow = 33;
+  var date = new Date();
+  var prevTime = date.getTime();
+  var times = 0;
+  var count = 0;
 
   var getBandwidth = function(analyser, freqs) {
+    date = new Date();
+    var currTime = date.getTime();
+    count++;
+    times = times +(currTime-prevTime);
+    //console.log(times/count);
+    if(times>Number.MAX_VALUE-1000)
+    {
+      count = 0;
+      times = 0;
+    }
+    prevTime = currTime;
+
     var primaryTone = freqToIndex(analyser, freq);
     var primaryVolume = freqs[primaryTone];
     // This ratio is totally empirical (aka trial-and-error).
@@ -57,17 +73,18 @@ window.doppler = (function() {
 
     var from = freqToIndex(analyser, freqSweepStart);
     var to   = freqToIndex(analyser, freqSweepEnd);
-    for (var i = from; i < to; i++) {
+
+    for (let i = from; i < to; i++) {
       osc.frequency.value = indexToFreq(analyser, i);
       analyser.getByteFrequencyData(audioData);
-
-      if (audioData[i] > maxAmp) {
+      var bandwidth = getBandwidth(analyser,audioData);
+      if (audioData[i] > maxAmp && bandwidth.left<4 &&bandwidth.right <4) {
         maxAmp = audioData[i];
         maxAmpIndex = i;
       }
+      
     }
-    // Sometimes the above procedure seems to fail, not sure why.
-    // If that happends, just use the old value.
+    // Sometimes fails if this function runs too soon
     if (maxAmpIndex == 0) {
       return oldFreq;
     }
@@ -99,7 +116,7 @@ window.doppler = (function() {
 
     // Doppler tone
     osc.frequency.value = freq;
-    osc.type = osc.SINE;
+    osc.type = 'sine';
     osc.start(0);
     osc.connect(ctx.destination);
 
@@ -108,13 +125,13 @@ window.doppler = (function() {
     // A quick timeout will hopefully decrease that bias effect.
     setTimeout(function() {
       // Optimize doppler tone
-      freq = optimizeFrequency(osc, analyser, 19000, 22000);
+      freq = optimizeFrequency(osc, analyser, 18000, 22000);
       osc.frequency.value = freq;
       console.log("Optimized frequency " + freq);
 
       clearInterval(readMicInterval);
       callback(analyser, userCallback);
-    });
+    },500);
   };
 
   return {

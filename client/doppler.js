@@ -89,7 +89,8 @@ window.doppler = (function() {
       return oldFreq;
     }
     else {
-      return indexToFreq(analyser, maxAmpIndex);
+      //return indexToFreq(analyser, maxAmpIndex);
+      return 20000;
     }
   };
 

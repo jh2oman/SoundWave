@@ -19,12 +19,15 @@ var prevTowards=0;
 var prevTogether=0;
 var peakTowards = 0;
 var peakAway = 0;
+
+
 function getMovements(timestamp,away,towards){
   var threshold = 4;
-  var awayUnit = 30;
-  var towardsUnit=70;
-  var togetherUnit = 100;
-  //console.log(timestamp-lastZero);
+  var awayUnit = 60;
+  var towardsUnit=140;
+  var togetherUnit = 250;
+  
+  //Moving Away
   if(away>threshold && towards<=threshold){
     //continuing away
     if(areaUnderCurve>=0)
@@ -93,22 +96,32 @@ function getMovements(timestamp,away,towards){
 function analyzeMovements(timestamp){
   if(movements.length>1)
   {
+    //console.log(movements);
     var length = movements.length;
     //single tap, double tap, and together
     if(movements[length-1] > 3 && movements[length-2] <8 && timestamp- prevTowards<800 && timestamp-prevAway>200 &&timestamp-prevTogether >500){
       console.log("tap");
       $("#box").css({"background-color": getRandomColor()});
+      changeText("TAP");
       while(movements.length)
         movements.pop();
     }
     else if(movements[length-1] > 3 && movements[length-2] <8 && movements[length-3] > 3 && movements[length-4] <8)
     {
       console.log("double tap");
+      var length = changeSize();
+
+      $("#box").css({"width": length, "height":length});
+      changeText("DOUBLE TAP!");
       while(movements.length)
         movements.pop();
     }
     else if(movements[length-1]===0){
       console.log("together");
+      changeText("TOGETHER!");
+      var length = $('#box').css('width');
+      $("#box").fadeOut(300);
+      $('#box').fadeIn(300);
       while(movements.length)
         movements.pop();
     }
@@ -122,4 +135,17 @@ function getRandomColor() {
         color += letters[Math.floor(Math.random() * 16)];
     }
     return color;
+
+}
+
+function changeSize(){
+  var rand = Math.floor(Math.random()*300+200);
+  return rand;
+}
+
+function changeText(string){
+  var text = $("h1");
+  text.html(string);
+  text.fadeIn(50);
+  text.fadeOut(1500);
 }
